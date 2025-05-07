@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { OfflineFallback } from "@/components/ui/OfflineFallback";
 import { ServiceWorkerRegistration } from "@/components/ui/ServiceWorkerRegistration";
+import { AppShell } from "@/components/ui/AppShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,13 +47,23 @@ export default function RootLayout({
     <html lang="en">
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        {/* Prefetch key resources for offline use */}
+        <link rel="prefetch" href="/fallback.html" />
+        <link rel="prefetch" href="/inventory" />
+        <link rel="prefetch" href="/enter-password" />
+        <link rel="prefetch" href="/icons/icon-192x192.png" />
+        <link rel="prefetch" href="/icons/icon-512x512.png" />
+        {/* Add a network detection meta tag for better user experience */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <Toaster />
-        <OfflineFallback />
+        <AppShell>
+          {children}
+          <Toaster />
+          <OfflineFallback />
+        </AppShell>
         <ServiceWorkerRegistration />
       </body>
     </html>

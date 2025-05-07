@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export interface InventoryItem {
   id: string;
@@ -14,20 +15,62 @@ const STORAGE_KEY = 'cafe-inventory-items';
 export function useInventory() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
 
-  // Load items from localStorage on mount
+  // Check online status
   useEffect(() => {
-    try {
-      const storedItems = localStorage.getItem(STORAGE_KEY);
-      if (storedItems) {
-        setItems(JSON.parse(storedItems));
-      }
-    } catch (error) {
-      console.error('Failed to load inventory items:', error);
-    } finally {
-      setIsLoading(false);
+    if (typeof navigator !== 'undefined') {
+      setIsOffline(!navigator.onLine);
+      
+      const handleOnline = () => setIsOffline(false);
+      const handleOffline = () => setIsOffline(true);
+      
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
     }
   }, []);
+
+  // Load items from localStorage on mount with retry for offline scenarios
+  useEffect(() => {
+    const loadItems = () => {
+      try {
+        const storedItems = localStorage.getItem(STORAGE_KEY);
+        if (storedItems) {
+          const parsedItems = JSON.parse(storedItems);
+          if (Array.isArray(parsedItems)) {
+            setItems(parsedItems);
+            // If we successfully loaded data, consider it a success
+            return true;
+          }
+        }
+        // No data found but no error either
+        return true;
+      } catch (error) {
+        console.error('Failed to load inventory items:', error);
+        // Return false to indicate failure
+        return false;
+      }
+    };
+
+    const attemptLoad = () => {
+      if (loadItems()) {
+        setIsLoading(false);
+      } else if (isOffline) {
+        // If offline and failed to load, retry after a delay
+        setTimeout(attemptLoad, 1000);
+      } else {
+        // If online and failed, just set loading to false
+        setIsLoading(false);
+      }
+    };
+
+    attemptLoad();
+  }, [isOffline]);
 
   // Save items to localStorage when they change
   useEffect(() => {
@@ -36,6 +79,7 @@ export function useInventory() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
       } catch (error) {
         console.error('Failed to save inventory items:', error);
+        toast.error('Failed to save data locally. You may be in private browsing mode or storage is full.');
       }
     }
   }, [items, isLoading]);
@@ -57,6 +101,7 @@ export function useInventory() {
   return {
     items,
     isLoading,
+    isOffline,
     addItem,
     removeItem
   };

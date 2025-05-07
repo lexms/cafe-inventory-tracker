@@ -3,13 +3,20 @@ const withPWA = require('next-pwa')({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === 'development',
+  buildExcludes: [/middleware-manifest.json$/],
+  fallbacks: {
+    document: '/fallback.html',
+    image: '/icons/icon-192x192.png',
+    font: false,
+    script: false,
+    style: false,
+  },
   runtimeCaching: [
     {
       urlPattern: /^https?.*/,
-      handler: 'NetworkFirst',
+      handler: 'StaleWhileRevalidate',
       options: {
         cacheName: 'offlineCache',
-        networkTimeoutSeconds: 10,
         expiration: {
           maxEntries: 200,
           maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
@@ -18,6 +25,21 @@ const withPWA = require('next-pwa')({
           statuses: [0, 200],
         },
       },
+    },
+    {
+      urlPattern: /\/api\/.*/i,
+      handler: 'NetworkFirst',
+      options: {
+        cacheName: 'api-cache',
+        networkTimeoutSeconds: 10,
+        expiration: {
+          maxEntries: 50,
+          maxAgeSeconds: 60 * 60 // 1 hour
+        },
+        cacheableResponse: {
+          statuses: [0, 200]
+        }
+      }
     },
     {
       urlPattern: /\/_next\/image\?url=.*/i,
@@ -41,6 +63,18 @@ const withPWA = require('next-pwa')({
         },
       },
     },
+    // Cache main pages specifically
+    {
+      urlPattern: /\/(?:inventory|enter-password|)$/,
+      handler: 'StaleWhileRevalidate',
+      options: {
+        cacheName: 'pages-cache',
+        expiration: {
+          maxEntries: 10,
+          maxAgeSeconds: 7 * 24 * 60 * 60 // 1 week
+        }
+      }
+    }
   ],
 });
 

@@ -6,7 +6,12 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:pwa": "next build && node test-offline.js",
+    "start:pwa": "next start",
+    "check:offline": "node test-offline.js",
+    "clean:sw": "node clean-sw.js",
+    "reset:pwa": "node clean-sw.js && next build && node test-offline.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
@@ -37,6 +42,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "babel-loader": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "tailwindcss": "^4",
