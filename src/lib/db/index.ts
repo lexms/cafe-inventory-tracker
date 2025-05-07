@@ -1,4 +1,4 @@
-import { createRxDatabase, addRxPlugin } from 'rxdb';
+import { createRxDatabase } from 'rxdb';
 import { getRxStorageDexie } from 'rxdb/plugins/storage-dexie';
 import { inventorySchema } from './schema';
 
@@ -12,13 +12,27 @@ export type InventoryItem = {
   createdAt: number;
 };
 
+// Add a selector type
+type InventorySelector = {
+  id?: string;
+  name?: string;
+  unit?: string;
+  createdAt?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any; // Allow other properties for querying
+};
+
 export type InventoryDatabase = {
   inventoryItems: {
-    find: Function;
-    insert: Function;
-    findOne: Function;
-    update: Function;
-    remove: Function;
+    find: (selector?: InventorySelector) => { 
+      sort: (order: Record<string, 'asc' | 'desc'>) => { 
+        exec: () => Promise<InventoryItem[]> 
+      }
+    };
+    insert: (item: Omit<InventoryItem, 'id'> & { id: string }) => Promise<InventoryItem>;
+    findOne: (selector: { id: string }) => { exec: () => Promise<InventoryItem | null> };
+    update: (selector: { id: string }) => Promise<void>;
+    remove: (selector: { id: string }) => Promise<void>;
   };
 };
 
