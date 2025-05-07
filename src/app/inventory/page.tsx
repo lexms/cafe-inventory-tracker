@@ -7,11 +7,13 @@ import { InventoryForm } from '@/components/inventory/InventoryForm';
 import { InventoryList } from '@/components/inventory/InventoryList';
 import { useAccess } from '@/lib/hooks/useAccess';
 import { useInventory } from '@/lib/hooks/useInventory';
+import { useOffline } from '@/lib/hooks/useOffline';
 
 export default function InventoryPage() {
   const router = useRouter();
   const { hasAccess, isLoading, logout } = useAccess();
   const { items, addItem, removeItem, isLoading: isLoadingInventory } = useInventory();
+  const { isOnline } = useOffline();
 
   // If not authenticated, redirect to enter password
   useEffect(() => {
@@ -44,7 +46,14 @@ export default function InventoryPage() {
       <header className="bg-white shadow">
         <div className="max-w-2xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">Cafe Inventory Tracker</h1>
-          <Button variant="outline" onClick={handleLogout}>Logout</Button>
+          <div className="flex items-center gap-2">
+            {!isOnline && (
+              <div className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full">
+                Offline
+              </div>
+            )}
+            <Button variant="outline" onClick={handleLogout}>Logout</Button>
+          </div>
         </div>
       </header>
 

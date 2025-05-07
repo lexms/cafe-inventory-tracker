@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { OfflineFallback } from "@/components/ui/OfflineFallback";
+import { ServiceWorkerRegistration } from "@/components/ui/ServiceWorkerRegistration";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +19,14 @@ export const metadata: Metadata = {
   title: "Cafe Inventory Tracker",
   description: "An offline-first inventory tracker for church coffee team",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Cafe Inventory",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
@@ -25,6 +34,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   minimumScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -34,12 +44,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
         <Toaster />
         <OfflineFallback />
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );
